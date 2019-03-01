@@ -1,4 +1,4 @@
-interface IBotConfig {
+export interface IBotConfig {
     readonly baseUrl: string;
     readonly userAgent: string;
 };

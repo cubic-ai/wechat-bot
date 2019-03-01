@@ -1,14 +1,12 @@
 import * as request from "request";
 
-import { CBotConfig, IBotUuidResponse } from "./interface";
+import { CBotConfig, IBotUuidResponse, IBotConfig } from "./interface";
 
 
-export function getUuid(): Promise<IBotUuidResponse> {
+export function getUuid(config: IBotConfig): Promise<IBotUuidResponse> {
     const options = {
-        url: `${CBotConfig.baseUrl}/jslogin`,
-        headers: {
-            "User-Agent": CBotConfig.userAgent
-        },
+        url: `${config.baseUrl}/jslogin`,
+        headers: { "User-Agent": config.userAgent },
         qs: {
             "appid": "wx782c26e4c19acffb",
             "fun": "new",
@@ -26,8 +24,8 @@ export function getUuid(): Promise<IBotUuidResponse> {
 }
 
 export async function login() {
-    const uuid = await getUuid();
-    console.log("***", uuid);
+    const response = await getUuid(CBotConfig);
+    console.log("***", response);
 }
 
 export function generateQrCode() {
