@@ -1,0 +1,19 @@
+{
+  "name": "wechat-bot",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cubic-ai/wechat-bot.git"
+  },
+  "author": "Fernando Zhu",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cubic-ai/wechat-bot/issues"
+  },
+  "homepage": "https://github.com/cubic-ai/wechat-bot#readme"
+}
