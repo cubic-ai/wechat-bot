@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "outFile": "dist/index.js"
+    },
+    "include": [
+        "app/src/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "app/tests/**/*.spec.ts"
+    ]
+}
