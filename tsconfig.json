@@ -1,12 +1,20 @@
 {
     "compilerOptions": {
-        "outFile": "dist/index.js"
+      "target": "es5",
+      "outDir": "dist",
+      "declaration": true,
+      "noImplicitAny": false,
+      "removeComments": true,
+      "moduleResolution": "node",
+      "sourceMap": false,
+      "lib": ["dom", "es6"]
     },
     "include": [
-        "app/src/**/*"
+      "app/src/**/*.ts"
     ],
-    "exclude": [
-        "node_modules",
-        "app/tests/**/*.spec.ts"
-    ]
-}
+    "exclude":  [
+      "node_modules"
+    ],
+    "compileOnSave": false,
+    "buildOnSave": false
+  }
