@@ -1,4 +1,5 @@
 import * as request from "request";
+import * as qrcode from "qrcode";
 
 import { CBotConfig, IBotUuidResponse, IBotConfig } from "./interface";
 
@@ -25,9 +26,9 @@ export function getUuid(config: IBotConfig): Promise<IBotUuidResponse> {
 
 export async function login() {
     const response = await getUuid(CBotConfig);
-    console.log("***", response);
-}
-
-export function generateQrCode() {
-
+    if (response.success && response.uuid) {
+        const content = `${CBotConfig.baseUrl}/l/${response.uuid}`;
+        const asciiQrCode = await qrcode.toString(content);
+        console.log(asciiQrCode);
+    }
 }
