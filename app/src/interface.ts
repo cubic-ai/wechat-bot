@@ -13,3 +13,10 @@ export interface IBotUuidResponse {
     uuid?: string;
     error?: any;
 }
+
+export enum EBotLoginStatus {
+    loggedIn = "200",
+    waitingAuthentication = "408",
+    watingConfirmation = "201",
+    loggedOut = "400"
+}

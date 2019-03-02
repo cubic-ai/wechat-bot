@@ -2,7 +2,7 @@
 import { login } from "./function";
 
 function main() {
-    login();
+    login()
 }
 
-main();
+main()
