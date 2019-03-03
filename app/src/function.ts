@@ -1,16 +1,15 @@
-import * as request from "request";
 import * as qrcode from "qrcode";
+import * as request from "request";
 
-import { CBotConfig, IBotUuidResponse, IBotConfig, EBotLoginStatus } from "./interface";
-
+import { CBotConfig, EBotLoginStatus, IBotConfig, IBotUuidResponse } from "./interface";
 
 export function getUuid(config: IBotConfig): Promise<IBotUuidResponse> {
     const options = {
-        url: `${config.baseUrl}/jslogin`,
         headers: { "User-Agent": config.userAgent },
+        url: `${config.baseUrl}/jslogin`,
         qs: {
-            "appid": "wx782c26e4c19acffb",
-            "fun": "new",
+            appid: "wx782c26e4c19acffb",
+            fun: "new",
         }
     };
     return new Promise((resolve, reject) => {
@@ -34,8 +33,8 @@ export async function login() {
 
         let loginSucceed: boolean = false;
         while (!loginSucceed) {
-            let loginStatus = await getBotLoginStatus(CBotConfig, response.uuid);
-            console.log("*** checking status")
+            const loginStatus = await getBotLoginStatus(CBotConfig, response.uuid);
+            console.log("*** checking status");
             switch (loginStatus) {
                 case EBotLoginStatus.loggedIn: {
                     loginSucceed = true;
@@ -69,11 +68,11 @@ export async function getBotLoginStatus(config: IBotConfig, uuid: string): Promi
         url: `${config.baseUrl}/cgi-bin/mmwebwx-bin/login`,
         headers: { "User-Agent": config.userAgent },
         qs: {
-            "loginicon": "true",
-            "uuid": uuid,
-            "tip": "1",
-            "r": ~localTime,
-            "_": localTime
+            loginicon: "true",
+            uuid,
+            tip: "1",
+            r: ~localTime,
+            _: localTime
         }
     };
     return new Promise((resolve, reject) => {
@@ -100,7 +99,7 @@ export async function getBotLoginStatus(config: IBotConfig, uuid: string): Promi
                         break;
                     }
                     case EBotLoginStatus.loggedOut: {
-                        console.log("*** logged out")
+                        console.log("*** logged out");
                         break;
                     }
                     default: {
