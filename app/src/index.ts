@@ -1,8 +1,9 @@
-
-import { login } from "./function";
+import { CBotConfig } from "./interface";
+import { WechatBot } from "./wechat-bot";
 
 function main() {
-    login()
+    const bot = new WechatBot(CBotConfig);
+    bot.login();
 }
 
-main()
+main();

@@ -21,7 +21,7 @@ describe("Dummy wechat server tests", () => {
 describe("The bot is able to login", () => {
     beforeEach(() => { service.start(); });
 
-    it("The bot is able to fetch valid UUID", () => {
+    it("The bot fetches UUID correctly", () => {
         // TODO:
         service.stop();
     });
