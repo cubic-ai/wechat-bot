@@ -2,6 +2,7 @@ import * as qrcode from "qrcode";
 import * as request from "request";
 
 import { CBotConfig, EBotLoginStatus, IBotConfig, IBotUuidResponse } from "./interface";
+import { sleep } from "./utils";
 
 export class WechatBot {
 
@@ -11,7 +12,14 @@ export class WechatBot {
         this.config = config;
     }
 
-    public getUuid(config: IBotConfig): Promise<IBotUuidResponse> {
+    /**
+     * Start the handshaking with wechat and grab the UUID returned
+     *
+     * @param {IBotConfig} config
+     * @returns {Promise<IBotUuidResponse>}
+     * @memberof WechatBot
+     */
+    public async getUuid(config: IBotConfig): Promise<IBotUuidResponse> {
         const options = {
             headers: { "User-Agent": config.userAgent },
             url: `${config.baseUrl}/jslogin`,
@@ -31,11 +39,15 @@ export class WechatBot {
         });
     }
 
+    /**
+     * Present a QR code and allow a user to login
+     *
+     * @memberof WechatBot
+     */
     public async login() {
         const response = await this.getUuid(CBotConfig);
         if (response.success && response.uuid) {
             const content = `${CBotConfig.baseUrl}/l/${response.uuid}`;
-            // await qrcode.toFile("./login.png", content, { type: "png" });
             const asciiQrCode = await qrcode.toString(content, { type: "terminal" });
             console.log(`${asciiQrCode}\n*** Waiting user authentication`);
 
@@ -58,17 +70,19 @@ export class WechatBot {
                         break;
                     }
                 }
-                await this.sleep(2000);
+                await sleep(2000);
             }
         }
     }
 
-    public sleep(ms: number): Promise<void> {
-        return new Promise(resolve => {
-            setTimeout(resolve, ms);
-        });
-    }
-
+    /**
+     * Check the current status of the login proess
+     *
+     * @param {IBotConfig} config
+     * @param {string} uuid
+     * @returns {Promise<EBotLoginStatus>}
+     * @memberof WechatBot
+     */
     public async getBotLoginStatus(config: IBotConfig, uuid: string): Promise<EBotLoginStatus> {
         const localTime = Number(new Date());
 
@@ -121,9 +135,8 @@ export class WechatBot {
             });
         });
     }
+
+    public pageRedirect() {
+        // TODO
+    }
 }
-
-
-
-
-

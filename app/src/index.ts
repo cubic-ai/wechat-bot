@@ -1,9 +1,15 @@
-import { CBotConfig } from "./interface";
-import { WechatBot } from "./wechat-bot";
+import { Logger } from "./logger";
 
-function main() {
-    const bot = new WechatBot(CBotConfig);
-    bot.login();
-}
+// import { CBotConfig } from "./interface";
+// import { WechatBot } from "./wechat-bot";
 
-main();
+// async function main() {
+//     const bot = new WechatBot(CBotConfig);
+//     await bot.login();
+// }
+
+// main();
+
+const logger = new Logger();
+logger.info("Hello world");
+logger.error("error");
