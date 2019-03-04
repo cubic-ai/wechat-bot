@@ -7,26 +7,26 @@ export function sleep(ms: number): Promise<void> {
 }
 
 export function detectOperatingSystem(): EOperationSystem {
-    let os = EOperationSystem.unKnown;
+    let os = EOperationSystem.UnKnown;
     switch (process.platform) {
         case "aix":
         case "freebsd":
         case "openbsd":
         case "sunos":
-            os = EOperationSystem.unix;
+            os = EOperationSystem.Unix;
             break;
         case "android":
         case "linux":
-            os = EOperationSystem.linux;
+            os = EOperationSystem.Linux;
             break;
         case "darwin":
-            os = EOperationSystem.macOs;
+            os = EOperationSystem.MacOs;
             break;
         case "win32":
-            os = EOperationSystem.windows;
+            os = EOperationSystem.Windows;
             break;
         default:
-            os = EOperationSystem.unKnown;
+            os = EOperationSystem.UnKnown;
             break;
     }
     return os;

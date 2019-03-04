@@ -1,7 +1,7 @@
 import * as qrcode from "qrcode";
 import * as request from "request";
 
-import { CBotConfig, EBotLoginStatus, IBotConfig, IBotUuidResponse } from "./interface";
+import { botConfig, EBotLoginStatus, IBotConfig, IBotUuidResponse } from "./interface";
 import { sleep } from "./utils";
 
 export class WechatBot {
@@ -45,25 +45,25 @@ export class WechatBot {
      * @memberof WechatBot
      */
     public async login() {
-        const response = await this.getUuid(CBotConfig);
+        const response = await this.getUuid(botConfig);
         if (response.success && response.uuid) {
-            const content = `${CBotConfig.baseUrl}/l/${response.uuid}`;
+            const content = `${botConfig.baseUrl}/l/${response.uuid}`;
             const asciiQrCode = await qrcode.toString(content, { type: "terminal" });
             console.log(`${asciiQrCode}\n*** Waiting user authentication`);
 
             let loginSucceed: boolean = false;
             while (!loginSucceed) {
-                const loginStatus = await this.getBotLoginStatus(CBotConfig, response.uuid);
+                const loginStatus = await this.getBotLoginStatus(botConfig, response.uuid);
                 console.log("*** checking status");
                 switch (loginStatus) {
-                    case EBotLoginStatus.loggedIn: {
+                    case EBotLoginStatus.LoggedIn: {
                         loginSucceed = true;
                         break;
                     }
-                    case EBotLoginStatus.waitingAuthentication: {
+                    case EBotLoginStatus.WaitingAuthentication: {
                         break;
                     }
-                    case EBotLoginStatus.loggedOut: {
+                    case EBotLoginStatus.LoggedOut: {
                         break;
                     }
                     default: {
@@ -108,19 +108,19 @@ export class WechatBot {
                     }
 
                     switch (loginStatus) {
-                        case EBotLoginStatus.loggedIn: {
+                        case EBotLoginStatus.LoggedIn: {
                             console.log("*** logged in");
                             break;
                         }
-                        case EBotLoginStatus.waitingAuthentication: {
+                        case EBotLoginStatus.WaitingAuthentication: {
                             console.log("*** waiting auth");
                             break;
                         }
-                        case EBotLoginStatus.watingConfirmation: {
+                        case EBotLoginStatus.WatingConfirmation: {
                             console.log("*** wating confirm");
                             break;
                         }
-                        case EBotLoginStatus.loggedOut: {
+                        case EBotLoginStatus.LoggedOut: {
                             console.log("*** logged out");
                             break;
                         }
@@ -131,9 +131,13 @@ export class WechatBot {
                     }
                 }
                 // TODO:
-                resolve(EBotLoginStatus.waitingAuthentication);
+                resolve(EBotLoginStatus.WaitingAuthentication);
             });
         });
+    }
+
+    public getLoginInfo() {
+        // TODO
     }
 
     public pageRedirect() {

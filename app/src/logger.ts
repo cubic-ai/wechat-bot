@@ -1,30 +1,12 @@
-import { EFontStyle } from "./interface";
+import { EFontStyle, ELoggingLevel, ILoggingColor } from "./interface";
 
-export enum ELoggingLevel {
-    none,
-    debug,
-    info,
-    warning,
-    error,
-    critical
-}
-
-export interface ILoggingColor {
-    [ELoggingLevel.none]: string;
-    [ELoggingLevel.debug]: string;
-    [ELoggingLevel.info]: string;
-    [ELoggingLevel.warning]: string;
-    [ELoggingLevel.error]: string;
-    [ELoggingLevel.critical]: string;
-}
-
-export const CLoggingColor = {
-    [ELoggingLevel.none]: EFontStyle.Reset,
-    [ELoggingLevel.debug]: EFontStyle.FgMagenta,
-    [ELoggingLevel.info]: EFontStyle.FgCyan,
-    [ELoggingLevel.warning]: EFontStyle.FgYellow,
-    [ELoggingLevel.error]: EFontStyle.FgRed,
-    [ELoggingLevel.critical]: EFontStyle.BgRed
+export const defaultLoggingColor = {
+    [ELoggingLevel.None]: EFontStyle.Reset,
+    [ELoggingLevel.Debug]: EFontStyle.FgMagenta,
+    [ELoggingLevel.Info]: EFontStyle.FgCyan,
+    [ELoggingLevel.Warning]: EFontStyle.FgYellow,
+    [ELoggingLevel.Error]: EFontStyle.FgRed,
+    [ELoggingLevel.Critical]: EFontStyle.BgRed
 };
 
 /**
@@ -35,8 +17,8 @@ export const CLoggingColor = {
  * @class Logger
  */
 export class Logger {
-    private loggingColor: ILoggingColor = CLoggingColor;
-    private level: ELoggingLevel = ELoggingLevel.none;
+    private loggingColor: ILoggingColor = defaultLoggingColor;
+    private level: ELoggingLevel = ELoggingLevel.None;
 
     constructor(loggingColor?: ILoggingColor) {
         if (loggingColor) {
@@ -54,22 +36,22 @@ export class Logger {
     }
 
     public debug(message: string) {
-        console.log(this.loggingColor[ELoggingLevel.debug], message);
+        console.log(this.loggingColor[ELoggingLevel.Debug], message);
     }
 
     public info(message: string) {
-        console.log(this.loggingColor[ELoggingLevel.info], message);
+        console.log(this.loggingColor[ELoggingLevel.Info], message);
     }
 
     public warning(message: string) {
-        console.log(this.loggingColor[ELoggingLevel.warning], message);
+        console.log(this.loggingColor[ELoggingLevel.Warning], message);
     }
 
     public error(message: string) {
-        console.log(this.loggingColor[ELoggingLevel.error], message);
+        console.log(this.loggingColor[ELoggingLevel.Error], message);
     }
 
     public critical(message: string) {
-        console.log(this.loggingColor[ELoggingLevel.critical], message);
+        console.log(this.loggingColor[ELoggingLevel.Critical], message);
     }
 }

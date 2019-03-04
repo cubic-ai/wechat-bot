@@ -1,10 +1,8 @@
-import { Logger } from "./logger";
-
-import { CBotConfig } from "./interface";
+import { botConfig } from "./interface";
 import { WechatBot } from "./wechat-bot";
 
 async function main() {
-    const bot = new WechatBot(CBotConfig);
+    const bot = new WechatBot(botConfig);
     await bot.login();
 }
 

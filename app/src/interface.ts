@@ -3,7 +3,7 @@ export interface IBotConfig {
     readonly userAgent: string;
 }
 
-export const CBotConfig = {
+export const botConfig = {
     baseUrl: "https://login.weixin.qq.com",
     userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/537.36 (KHTML, like Gecko) " +
         "Chrome/72.0.3626.109 Safari/537.3"
@@ -16,18 +16,18 @@ export interface IBotUuidResponse {
 }
 
 export enum EBotLoginStatus {
-    loggedIn = "200",
-    waitingAuthentication = "408",
-    watingConfirmation = "201",
-    loggedOut = "400"
+    LoggedIn = "200",
+    WaitingAuthentication = "408",
+    WatingConfirmation = "201",
+    LoggedOut = "400"
 }
 
 export enum EOperationSystem {
-    windows = "Windows",
-    macOs = "MacOS",
-    unix = "Unix",
-    linux = "Linux",
-    unKnown = "Unknown"
+    Windows = "Windows",
+    MacOs = "MacOS",
+    Unix = "Unix",
+    Linux = "Linux",
+    UnKnown = "Unknown"
 }
 
 export enum EFontStyle {
@@ -54,4 +54,22 @@ export enum EFontStyle {
     BgMagenta = "\x1b[45m%s\x1b[0m",
     BgCyan = "\x1b[46m%s\x1b[0m",
     BgWhite = "\x1b[47m%s\x1b[0m"
+}
+
+export enum ELoggingLevel {
+    None,
+    Debug,
+    Info,
+    Warning,
+    Error,
+    Critical
+}
+
+export interface ILoggingColor {
+    [ELoggingLevel.None]: string;
+    [ELoggingLevel.Debug]: string;
+    [ELoggingLevel.Info]: string;
+    [ELoggingLevel.Warning]: string;
+    [ELoggingLevel.Error]: string;
+    [ELoggingLevel.Critical]: string;
 }

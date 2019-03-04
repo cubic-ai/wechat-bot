@@ -2,15 +2,18 @@
     "extends": "tslint:recommended",
     "rules": {
         "max-line-length": {
-            "options": [
-                120
-            ]
+            "options": [ 120 ]
         },
         "quotemark": [true, "double"],
         "trailing-comma": false,
         "arrow-parens": false,
         "no-bitwise": false,
         "object-literal-sort-keys": false,
-        "no-console": false
+        "no-console": false,
+        "variable-name": [
+            true,
+            "check-format"
+        ],
+        "file-name-casing": [true, "kebab-case"]
     }
 }
