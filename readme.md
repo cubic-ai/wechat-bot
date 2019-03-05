@@ -1,1 +1,2 @@
-alpha build: [![Build Status](https://travis-ci.org/cubic-ai/wechat-bot.svg?branch=v0.0.0.1)](https://travis-ci.org/cubic-ai/wechat-bot)
+[![Build Status](https://travis-ci.org/cubic-ai/wechat-bot.svg?branch=v0.0.0.1)](https://travis-ci.org/cubic-ai/wechat-bot)
+[![Coverage Status](https://coveralls.io/repos/github/cubic-ai/cubic-crawler/badge.svg?branch=master)](https://coveralls.io/github/cubic-ai/cubic-crawler?branch=master)
