@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "npm run clean && node node_modules/webpack-cli/bin/cli.js",
-    "clean": "node node_modules/rimraf/bin.js dist/",
+    "clean": "node node_modules/rimraf/bin.js dist/ .nyc_output",
     "start": "npm run build && node dist/index.js",
     "test": "npm run clean && nyc mocha --opts config/mocha.opts"
   },
