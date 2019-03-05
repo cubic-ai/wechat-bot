@@ -2,7 +2,7 @@
 import { expect } from "chai";
 import * as request from "request";
 
-import { DummyWechatService } from "./dummy-wechat.service";
+import { DummyWechatService } from "../src/support/dummy-wechat.service";
 
 const baseUrl: string = "http://localhost:4200/";
 const service = new DummyWechatService();
@@ -20,13 +20,4 @@ describe("Dummy wechat server tests", () => {
         });
     });
 
-});
-
-describe("The bot is able to login", () => {
-    beforeEach(() => { service.start(); });
-
-    it("The bot fetches UUID correctly", async () => {
-        // TODO:
-        service.stop();
-    });
 });
