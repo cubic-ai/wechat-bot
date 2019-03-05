@@ -7,7 +7,7 @@
     "build": "npm run clean && node node_modules/webpack-cli/bin/cli.js",
     "clean": "node node_modules/rimraf/bin.js dist/",
     "start": "npm run build && node dist/index.js",
-    "test": "mocha -r ts-node/register app/tests/**/*.spec.ts"
+    "test": "nyc --reporter=text mocha -r ts-node/register app/config/mocha.config.ts app/test/**/*.spec.ts"
   },
   "repository": {
     "type": "git",
@@ -29,6 +29,7 @@
     "chai": "^4.2.0",
     "express": "^4.16.4",
     "mocha": "^6.0.2",
+    "nyc": "^13.3.0",
     "rimraf": "^2.6.3",
     "ts-loader": "^5.3.3",
     "ts-node": "^8.0.2",

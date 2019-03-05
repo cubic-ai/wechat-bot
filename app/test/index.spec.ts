@@ -1,3 +1,4 @@
+
 import { expect } from "chai";
 import * as request from "request";
 
@@ -10,18 +11,21 @@ describe("Dummy wechat server tests", () => {
 
     beforeEach(() => { service.start(); });
 
-    it("Dummy wechat server can be started", () => {
-        request({ url: baseUrl }, (error, response, body) => {
-            expect(body).equal("Wechat server is working.");
-            service.stop();
+    context("with no requests header", () => {
+        it("Dummy wechat server can be started", async () => {
+            request({ url: baseUrl }, (error, response, body) => {
+                expect(body).equal("Wechat server is working.");
+                service.stop();
+            });
         });
     });
+
 });
 
 describe("The bot is able to login", () => {
     beforeEach(() => { service.start(); });
 
-    it("The bot fetches UUID correctly", () => {
+    it("The bot fetches UUID correctly", async () => {
         // TODO:
         service.stop();
     });
