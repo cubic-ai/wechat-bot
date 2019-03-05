@@ -9,6 +9,18 @@
     "start": "npm run build && node dist/index.js",
     "test": "nyc --reporter=text mocha -r ts-node/register app/config/mocha.config.ts app/test/**/*.spec.ts"
   },
+  "nyc": {
+    "extension": [
+      ".ts"
+    ],
+    "exclude": [
+      "**/*.d.ts"
+    ],
+    "reporter": [
+      "html"
+    ],
+    "all": true
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cubic-ai/wechat-bot.git"
