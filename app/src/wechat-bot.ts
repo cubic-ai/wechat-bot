@@ -2,13 +2,17 @@ import * as qrcode from "qrcode";
 import * as request from "request";
 
 import { botConfig, EBotLoginStatus, IBotConfig, IBotUuidResponse } from "./interface";
+import { Logger } from "./logger";
 import { sleep } from "./utils";
 
 export class WechatBot {
 
     private config: IBotConfig;
 
-    constructor(config: IBotConfig) {
+    constructor(
+        private _logger: Logger,
+        config: IBotConfig
+    ) {
         this.config = config;
     }
 
@@ -53,7 +57,7 @@ export class WechatBot {
 
             let loginSucceed: boolean = false;
             while (!loginSucceed) {
-                const loginStatus = await this.getBotLoginStatus(botConfig, response.uuid);
+                const loginStatus = await this.botLoginStatus(botConfig, response.uuid);
                 console.log("*** checking status");
                 switch (loginStatus) {
                     case EBotLoginStatus.LoggedIn: {
@@ -83,7 +87,7 @@ export class WechatBot {
      * @returns {Promise<EBotLoginStatus>}
      * @memberof WechatBot
      */
-    public async getBotLoginStatus(config: IBotConfig, uuid: string): Promise<EBotLoginStatus> {
+    public async botLoginStatus(config: IBotConfig, uuid: string): Promise<EBotLoginStatus> {
         const localTime = Number(new Date());
 
         const options = {
@@ -140,7 +144,37 @@ export class WechatBot {
         // TODO
     }
 
-    public pageRedirect() {
-        // TODO
+    public redirect(content: string) {
+        console.log("*** content:", content);
+        const pattern = /window.redirect_uri="(\S+)";/;
+        const url = content.search(pattern);
+
+        const urlMap = {
+            "wx2.qq.com": ["file.wx2.qq.com", "webpush.wx2.qq.com"],
+            "wx8.qq.com": ["file.wx8.qq.com", "webpush.wx8.qq.com"],
+            "qq.com": ["file.wx.qq.com", "webpush.wx.qq.com"],
+            "web2.wechat.com": ["file.web2.wechat.com", "webpush.web2.wechat.com"],
+            "wechat.com": ["file.web.wechat.com", "webpush.web.wechat.com"]
+        };
+
+        ["wx2.qq.com", "wx8.qq.com", "qq.com", "web2.wechat.com", "wechat.com"].forEach(url => {
+            const [fileUrl, syncUrl] = [
+                `https://file.${url}/cgi-bin/mmwebwx-bin`,
+                `https://webpush.${url}/cgi-bin/mmwebwx-bin`
+            ];
+            // TODO:
+            // deviceid
+            // logintime
+            // base request
+        });
+
+        const options = {
+            headers: { "User-Agent": this.config.userAgent },
+            url: `${this.config.baseUrl}/jslogin`,
+            qs: {
+                appid: "wx782c26e4c19acffb",
+                fun: "new",
+            }
+        };
     }
 }
