@@ -164,6 +164,7 @@ export class WechatBot {
             ];
             // TODO:
             // deviceid
+            const deviceId = `e${String(Math.random()).slice(2, 17)}`;
             // logintime
             // base request
         });
