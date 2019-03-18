@@ -18,7 +18,7 @@ export interface IBotUuidResponse {
 export enum EBotLoginStatus {
     LoggedIn = "200",
     WaitingAuthentication = "408",
-    WatingConfirmation = "201",
+    WaitingConfirmation = "201",
     LoggedOut = "400"
 }
 
