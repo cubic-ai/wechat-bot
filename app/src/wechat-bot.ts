@@ -53,21 +53,28 @@ export class WechatBot {
         if (response.success && response.uuid) {
             const content = `${botConfig.baseUrl}/l/${response.uuid}`;
             const asciiQrCode = await qrcode.toString(content, { type: "terminal" });
-            console.log(`${asciiQrCode}\n*** Waiting user authentication`);
+            this._logger.info(`${asciiQrCode}\n*** Waiting authentication`);
 
             let loginSucceed: boolean = false;
             while (!loginSucceed) {
-                const loginStatus = await this.botLoginStatus(botConfig, response.uuid);
-                console.log("*** checking status");
+                const [loginStatus, responseBody] = await this.botLoginStatus(botConfig, response.uuid);
                 switch (loginStatus) {
                     case EBotLoginStatus.LoggedIn: {
+                        this._logger.info("*** Login success\n*** Redirecting starts");
                         loginSucceed = true;
+                        await this.redirect(responseBody);
                         break;
                     }
                     case EBotLoginStatus.WaitingAuthentication: {
+                        this._logger.info("*** Waiting auth");
+                        break;
+                    }
+                    case EBotLoginStatus.WaitingConfirmation: {
+                        this._logger.info("*** Waiting confirmation");
                         break;
                     }
                     case EBotLoginStatus.LoggedOut: {
+                        this._logger.info("*** Bye");
                         break;
                     }
                     default: {
@@ -87,7 +94,7 @@ export class WechatBot {
      * @returns {Promise<EBotLoginStatus>}
      * @memberof WechatBot
      */
-    public async botLoginStatus(config: IBotConfig, uuid: string): Promise<EBotLoginStatus> {
+    public async botLoginStatus(config: IBotConfig, uuid: string): Promise<[EBotLoginStatus, string]> {
         const localTime = Number(new Date());
 
         const options = {
@@ -104,78 +111,49 @@ export class WechatBot {
         return new Promise((resolve, reject) => {
             request(options, (error, response, body) => {
                 if (response.statusCode === 200) {
-                    console.log("*** body:", body);
                     const loginStatus = body.match(/window.code=(\d+)/)[1];
-                    console.log("*** status:", loginStatus);
                     if (body === "400") {
-                        console.log("*** wating user action");
+                        this._logger.log("*** wating user action");
                     }
-
-                    switch (loginStatus) {
-                        case EBotLoginStatus.LoggedIn: {
-                            console.log("*** logged in");
-                            break;
-                        }
-                        case EBotLoginStatus.WaitingAuthentication: {
-                            console.log("*** waiting auth");
-                            break;
-                        }
-                        case EBotLoginStatus.WatingConfirmation: {
-                            console.log("*** wating confirm");
-                            break;
-                        }
-                        case EBotLoginStatus.LoggedOut: {
-                            console.log("*** logged out");
-                            break;
-                        }
-                        default: {
-                            console.log("*** default");
-                            break;
-                        }
-                    }
+                    resolve([loginStatus, body]);
                 }
-                // TODO:
-                resolve(EBotLoginStatus.WaitingAuthentication);
+                resolve([EBotLoginStatus.WaitingAuthentication, body]);
             });
         });
     }
 
-    public getLoginInfo() {
-        // TODO
-    }
-
     public redirect(content: string) {
-        console.log("*** content:", content);
         const pattern = /window.redirect_uri="(\S+)";/;
-        const url = content.search(pattern);
-
-        const urlMap = {
-            "wx2.qq.com": ["file.wx2.qq.com", "webpush.wx2.qq.com"],
-            "wx8.qq.com": ["file.wx8.qq.com", "webpush.wx8.qq.com"],
-            "qq.com": ["file.wx.qq.com", "webpush.wx.qq.com"],
-            "web2.wechat.com": ["file.web2.wechat.com", "webpush.web2.wechat.com"],
-            "wechat.com": ["file.web.wechat.com", "webpush.web.wechat.com"]
-        };
-
-        ["wx2.qq.com", "wx8.qq.com", "qq.com", "web2.wechat.com", "wechat.com"].forEach(url => {
-            const [fileUrl, syncUrl] = [
-                `https://file.${url}/cgi-bin/mmwebwx-bin`,
-                `https://webpush.${url}/cgi-bin/mmwebwx-bin`
-            ];
-            // TODO:
-            // deviceid
-            const deviceId = `e${String(Math.random()).slice(2, 17)}`;
-            // logintime
-            // base request
-        });
-
+        const url = content.match(pattern)[1];
         const options = {
+            url,
             headers: { "User-Agent": this.config.userAgent },
-            url: `${this.config.baseUrl}/jslogin`,
-            qs: {
-                appid: "wx782c26e4c19acffb",
-                fun: "new",
-            }
+            followRedirect: false
         };
+
+        return new Promise((resolve, reject) => {
+            request(options, (error, response, body) => {
+                this._logger.info(`*** ${body}`);
+                /*
+                ["wx2.qq.com", "wx8.qq.com", "qq.com", "web2.wechat.com", "wechat.com"].forEach(() => {
+                    const [fileUrl, syncUrl] = [
+                        `https://file.${url}/cgi-bin/mmwebwx-bin`,
+                        `https://webpush.${url}/cgi-bin/mmwebwx-bin`
+                    ];
+                    // deviceid
+                    const deviceId = `e${String(Math.random()).slice(2, 17)}`;
+                    const loginTime = (new Date()).getTime();
+                    const request = {
+                        skey: "",
+                        wxsid: "",
+                        wxuin: "",
+                        pass_ticket: ""
+                    };
+                });
+                */
+
+                resolve();
+            });
+        });
     }
 }
