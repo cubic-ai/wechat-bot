@@ -154,3 +154,4 @@ $RECYCLE.BIN/
 
 dist/
 package-lock.json
+temp/
