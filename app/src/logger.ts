@@ -57,12 +57,10 @@ export class Logger {
 
     private compressArguments(argList: any[]): string {
         let args: string = "";
-        // tslint:disable-next-line: prefer-for-of
-        for (let index = 0; index < argList.length; index++) {
-            const arg = argList[index];
-            if (typeof arg !== "string") {
-                args += JSON.stringify(arg);
-            } else { args += arg; }
+        for (const arg of argList) {
+            if (typeof arg === "string") { args += ` ${arg}`; } else {
+                args += ` ${JSON.stringify(arg)}`;
+            }
         }
         return args;
     }

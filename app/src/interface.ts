@@ -73,3 +73,43 @@ export interface ILoggingColor {
     [ELoggingLevel.Error]: string;
     [ELoggingLevel.Critical]: string;
 }
+
+export enum EUrl {
+    WeChatInit
+}
+
+export class LoginInfo {
+
+    public static redirectUrl: string;
+    public static deviceId: string;
+    public static loginTime: number;
+    public static passTicket: string;
+    public static skey: string;
+    public static wxsid: string;
+    public static wxuin: string;
+
+    private static readonly lookupKeys = ["wx2.qq.com", "wx8.qq.com", "wx.qq.com", "web2.wechat.com", "web.wechat.com"];
+
+    public static get handshakeUrls(): { fileUrl: string, syncUrl: string } {
+        const urls = this.lookupKeys
+            .filter((baseUrl: string) => this.redirectUrl && this.redirectUrl.indexOf(baseUrl) > -1);
+
+        if (Array.isArray(urls) && urls.length > 0) {
+            return {
+                fileUrl: `https://file.${urls[0]}/cgi-bin/mmwebwx-bin`,
+                syncUrl: `https://webpush.${urls[0]}/cgi-bin/mmwebwx-bin`
+            };
+        }
+    }
+
+    public static get BaseRequest(): object {
+        return {
+            BaseRequest: {
+                Uin: this.wxuin,
+                Sid: this.wxsid,
+                Skey: this.skey,
+                DeviceID: this.deviceId
+            }
+        };
+    }
+}
