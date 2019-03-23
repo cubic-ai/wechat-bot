@@ -35,27 +35,27 @@ export class Logger {
         console.log(this.loggingColor[level], message);
     }
 
-    public debug() {
-        console.log(this.loggingColor[ELoggingLevel.Debug], `<-- DEBUG: ${this.compressArguments(arguments)}`);
+    public debug(...args: any[]) {
+        console.log(this.loggingColor[ELoggingLevel.Debug], `<-- DEBUG: ${this.compressArguments(args)}`);
     }
 
-    public info() {
-        console.log(this.loggingColor[ELoggingLevel.Info], `<-- INFO: ${this.compressArguments(arguments)}`);
+    public info(...args: any[]) {
+        console.log(this.loggingColor[ELoggingLevel.Info], `<-- INFO: ${this.compressArguments(args)}`);
     }
 
-    public warn() {
-        console.log(this.loggingColor[ELoggingLevel.Warning], `<-- WARN: ${this.compressArguments(arguments)}`);
+    public warn(...args: any[]) {
+        console.log(this.loggingColor[ELoggingLevel.Warning], `<-- WARN: ${this.compressArguments(args)}`);
     }
 
-    public error() {
-        console.log(this.loggingColor[ELoggingLevel.Error], `<-- ERROR: ${this.compressArguments(arguments)}`);
+    public error(...args: any[]) {
+        console.log(this.loggingColor[ELoggingLevel.Error], `<-- ERROR: ${this.compressArguments(args)}`);
     }
 
-    public critical() {
-        console.log(this.loggingColor[ELoggingLevel.Critical], `<-- CRITICAL: ${this.compressArguments(arguments)}`);
+    public critical(...args: any[]) {
+        console.log(this.loggingColor[ELoggingLevel.Critical], `<-- CRITICAL: ${this.compressArguments(args)}`);
     }
 
-    private compressArguments(argList: IArguments): string {
+    private compressArguments(argList: any[]): string {
         let args: string = "";
         // tslint:disable-next-line: prefer-for-of
         for (let index = 0; index < argList.length; index++) {
