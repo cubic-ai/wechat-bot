@@ -35,23 +35,35 @@ export class Logger {
         console.log(this.loggingColor[level], message);
     }
 
-    public debug(message: string) {
-        console.log(this.loggingColor[ELoggingLevel.Debug], message);
+    public debug() {
+        console.log(this.loggingColor[ELoggingLevel.Debug], `<-- DEBUG: ${this.compressArguments(arguments)}`);
     }
 
-    public info(message: string) {
-        console.log(this.loggingColor[ELoggingLevel.Info], message);
+    public info() {
+        console.log(this.loggingColor[ELoggingLevel.Info], `<-- INFO: ${this.compressArguments(arguments)}`);
     }
 
-    public warning(message: string) {
-        console.log(this.loggingColor[ELoggingLevel.Warning], message);
+    public warn() {
+        console.log(this.loggingColor[ELoggingLevel.Warning], `<-- WARN: ${this.compressArguments(arguments)}`);
     }
 
-    public error(message: string) {
-        console.log(this.loggingColor[ELoggingLevel.Error], message);
+    public error() {
+        console.log(this.loggingColor[ELoggingLevel.Error], `<-- ERROR: ${this.compressArguments(arguments)}`);
     }
 
-    public critical(message: string) {
-        console.log(this.loggingColor[ELoggingLevel.Critical], message);
+    public critical() {
+        console.log(this.loggingColor[ELoggingLevel.Critical], `<-- CRITICAL: ${this.compressArguments(arguments)}`);
+    }
+
+    private compressArguments(argList: IArguments): string {
+        let args: string = "";
+        // tslint:disable-next-line: prefer-for-of
+        for (let index = 0; index < argList.length; index++) {
+            const arg = argList[index];
+            if (typeof arg !== "string") {
+                args += JSON.stringify(arg);
+            } else { args += arg; }
+        }
+        return args;
     }
 }
