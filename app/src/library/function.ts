@@ -125,3 +125,11 @@ async function initWechat(): Promise<void> {
     // TODO: process response data
     return Promise.resolve();
 }
+
+async function extractCurrentUser() {
+    // TODO:
+}
+
+async function extractContactList() {
+    // TODO:
+}
