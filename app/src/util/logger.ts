@@ -1,4 +1,4 @@
-import { EFontStyle, ELoggingLevel, ILoggingColor } from "../interface";
+import { EFontStyle, ELoggingLevel, ILoggingColor } from "../library/interface";
 
 export const defaultLoggingColor = {
     [ELoggingLevel.None]: EFontStyle.Reset,
@@ -35,24 +35,28 @@ export class Logger {
         console.log(this.loggingColor[level], message);
     }
 
+    public welcome() {
+        this.info("*** SATRT ***");
+    }
+
     public debug(...args: any[]) {
-        console.log(this.loggingColor[ELoggingLevel.Debug], `<-- DEBUG: ${this.compressArguments(args)}`);
+        console.log(this.loggingColor[ELoggingLevel.Debug], `-- DEBUG: ${this.compressArguments(args)}`);
     }
 
     public info(...args: any[]) {
-        console.log(this.loggingColor[ELoggingLevel.Info], `<-- INFO: ${this.compressArguments(args)}`);
+        console.log(this.loggingColor[ELoggingLevel.Info], `-- INFO: ${this.compressArguments(args)}`);
     }
 
     public warn(...args: any[]) {
-        console.log(this.loggingColor[ELoggingLevel.Warning], `<-- WARN: ${this.compressArguments(args)}`);
+        console.log(this.loggingColor[ELoggingLevel.Warning], `-- WARN: ${this.compressArguments(args)}`);
     }
 
     public error(...args: any[]) {
-        console.log(this.loggingColor[ELoggingLevel.Error], `<-- ERROR: ${this.compressArguments(args)}`);
+        console.log(this.loggingColor[ELoggingLevel.Error], `-- ERROR: ${this.compressArguments(args)}`);
     }
 
     public critical(...args: any[]) {
-        console.log(this.loggingColor[ELoggingLevel.Critical], `<-- CRITICAL: ${this.compressArguments(args)}`);
+        console.log(this.loggingColor[ELoggingLevel.Critical], `-- CRITICAL: ${this.compressArguments(args)}`);
     }
 
     private compressArguments(argList: any[]): string {
@@ -65,3 +69,5 @@ export class Logger {
         return args;
     }
 }
+
+export const logger = new Logger();

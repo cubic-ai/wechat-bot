@@ -1,4 +1,4 @@
-import { EOperationSystem, EUrl } from "./interface";
+import { EOperationSystem } from "../library/interface";
 
 export function sleep(ms: number): Promise<void> {
     return new Promise(resolve => {

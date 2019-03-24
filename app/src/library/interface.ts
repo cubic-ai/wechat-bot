@@ -92,7 +92,7 @@ export class LoginInfo {
 
     public static get handshakeUrls(): { fileUrl: string, syncUrl: string } {
         const urls = this.lookupKeys
-            .filter((baseUrl: string) => this.redirectUrl && this.redirectUrl.indexOf(baseUrl) > -1);
+            .filter((baseUrl: string) => this.wechatInitUrl && this.wechatInitUrl.indexOf(baseUrl) > -1);
 
         if (Array.isArray(urls) && urls.length > 0) {
             return {
@@ -112,4 +112,9 @@ export class LoginInfo {
             }
         };
     }
+}
+
+export enum EBotEvent {
+    LoginStart = "LoginStart",
+    Quit = "Quit"
 }

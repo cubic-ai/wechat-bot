@@ -15,6 +15,7 @@
             "check-format",
             "allow-leading-underscore"
         ],
-        "file-name-casing": [true, "kebab-case"]
+        "file-name-casing": [true, "kebab-case"],
+        "curly": [true, "ignore-same-line"]
     }
 }

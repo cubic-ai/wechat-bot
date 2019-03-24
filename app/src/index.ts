@@ -1,11 +1,9 @@
-import { botConfig } from "./interface";
-import { Bot } from "./lib/bot";
-import { Logger } from "./utils/logger";
+import { Bot } from "./library/bot";
+import { botConfig } from "./library/interface";
 
-async function main() {
-    const logger = new Logger();
-    const bot = new Bot(logger, botConfig);
-    await bot.login();
+function main() {
+    const bot = new Bot(botConfig);
+    bot.run();
 }
 
 main();
