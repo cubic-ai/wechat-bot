@@ -80,7 +80,7 @@ export enum EUrl {
 
 export class LoginInfo {
 
-    public static redirectUrl: string;
+    public static wechatInitUrl: string;
     public static deviceId: string;
     public static loginTime: number;
     public static passTicket: string;
