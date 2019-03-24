@@ -12,7 +12,8 @@
         "no-console": false,
         "variable-name": [
             true,
-            "check-format"
+            "check-format",
+            "allow-leading-underscore"
         ],
         "file-name-casing": [true, "kebab-case"]
     }
