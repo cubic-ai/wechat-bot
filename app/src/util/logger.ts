@@ -1,4 +1,4 @@
-import { appendFileSync } from "fs";
+import { appendFileSync, appendFile } from "fs";
 
 import { EFontStyle, ELoggingLevel, ILoggingColor } from "../library/interface";
 
@@ -48,32 +48,43 @@ export class Logger {
     }
 
     public debug(...args: any[]) {
-        console.log(this._loggingColor[ELoggingLevel.Debug], `-- DEBUG: ${this.compressArguments(args)}`);
+        const msg: string = `-- DEBUG: ${this.compressArguments(args)}`;
+        console.log(this._loggingColor[ELoggingLevel.Debug], msg);
         if (this._logToFile) {
-            //
+            appendFileSync(this._logFilePath, `[${new Date()}] ${msg}`);
         }
     }
 
     public info(...args: any[]) {
-        console.log(this._loggingColor[ELoggingLevel.Info], `-- INFO: ${this.compressArguments(args)}`);
+        const msg: string = `-- INFO: ${this.compressArguments(args)}`;
+        console.log(this._loggingColor[ELoggingLevel.Info], msg);
         if (this._logToFile) {
-
+            appendFileSync(this._logFilePath, `[${new Date()}] ${msg}`);
         }
     }
 
     public warn(...args: any[]) {
-        console.log(this._loggingColor[ELoggingLevel.Warning], `-- WARN: ${this.compressArguments(args)}`);
+        const msg: string = `-- WARN: ${this.compressArguments(args)}`;
+        console.log(this._loggingColor[ELoggingLevel.Warning], msg);
         if (this._logToFile) {
-            
+            appendFileSync(this._logFilePath, `[${new Date()}] ${msg}`);
         }
     }
 
     public error(...args: any[]) {
-        console.log(this._loggingColor[ELoggingLevel.Error], `-- ERROR: ${this.compressArguments(args)}`);
+        const msg: string = `-- ERROR: ${this.compressArguments(args)}`;
+        console.log(this._loggingColor[ELoggingLevel.Error], msg);
+        if (this._logToFile) {
+            appendFileSync(this._logFilePath, `[${new Date()}] ${msg}`);
+        }
     }
 
     public critical(...args: any[]) {
-        console.log(this._loggingColor[ELoggingLevel.Critical], `-- CRITICAL: ${this.compressArguments(args)}`);
+        const msg: string = `-- CRITICAL: ${this.compressArguments(args)}`;
+        console.log(this._loggingColor[ELoggingLevel.Critical], );
+        if (this._logToFile) {
+            appendFileSync(this._logFilePath, `[${new Date()}] ${msg}`);
+        }
     }
 
     private compressArguments(argList: any[]): string {
