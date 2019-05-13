@@ -1,8 +1,8 @@
-import { Bot } from "./library/bot";
+import { CubicBot } from "./library/bot";
 import { botConfig } from "./library/interface";
 
 function main() {
-    const bot = new Bot(botConfig);
+    const bot = new CubicBot(botConfig);
     bot.run();
 }
 

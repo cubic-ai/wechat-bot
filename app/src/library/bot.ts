@@ -4,20 +4,20 @@ import { parseString } from "xml2js";
 
 import { sleep } from "../util";
 import { logger } from "../util/logger";
-import { BotEmitter } from "./emitter";
+import { CubicBotEmitter } from "./emitter";
 import { botConfig, EBotEvent, EBotLoginStatus, IBotConfig, IBotUuidResponse, LoginInfo } from "./interface";
 
-export class Bot {
+export class CubicBot {
 
     private config: IBotConfig;
-    private _emitter: BotEmitter;
+    private _emitter: CubicBotEmitter;
     private _running: boolean = false;
 
     constructor(
         config: IBotConfig
     ) {
         this.config = config;
-        this._emitter = new BotEmitter();
+        this._emitter = new CubicBotEmitter();
     }
 
     /**
@@ -27,7 +27,7 @@ export class Bot {
      * @returns {Promise<IBotUuidResponse>}
      * @memberof WechatBot
      */
-    public async getUuid(config: IBotConfig): Promise<IBotUuidResponse> {
+    public async getUUID(config: IBotConfig): Promise<IBotUuidResponse> {
         const options = {
             headers: { "User-Agent": config.userAgent },
             url: `${config.baseUrl}/jslogin`,
@@ -53,7 +53,7 @@ export class Bot {
      * @memberof WechatBot
      */
     public async login() {
-        const response = await this.getUuid(botConfig);
+        const response = await this.getUUID(botConfig);
         if (response.success && response.uuid) {
             const content = `${botConfig.baseUrl}/l/${response.uuid}`;
             const asciiQrCode = await qrcode.toString(content, { type: "terminal" });

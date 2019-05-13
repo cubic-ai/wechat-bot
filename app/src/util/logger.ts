@@ -1,5 +1,6 @@
-import { appendFileSync, appendFile } from "fs";
+import { appendFileSync, existsSync} from "fs";
 
+import { isNullOrUndefined } from "util";
 import { EFontStyle, ELoggingLevel, ILoggingColor } from "../library/interface";
 
 export const defaultLoggingColor = {
@@ -21,8 +22,8 @@ export const defaultLoggingColor = {
 export class Logger {
     private _loggingColor: ILoggingColor = defaultLoggingColor;
     private _level: ELoggingLevel = ELoggingLevel.None;
-    private _logToFile: boolean = false;
-    private readonly _logFilePath: string = "bot.log";
+    private _logToFile: boolean = true;
+    private _logFilePath: string = "bot.log";
 
     constructor(loggingColor?: ILoggingColor) {
         if (loggingColor) {
@@ -32,6 +33,18 @@ export class Logger {
 
     public setLevel(level: ELoggingLevel) {
         this._level = level;
+    }
+
+    public setLogToFile(value: boolean) {
+        this._logToFile = value;
+    }
+
+    public setLogPath(path: string) {
+        if (!isNullOrUndefined(path) && path !== "") {
+            this._logFilePath = path;
+        } else {
+            this.error("Invalid log file path");
+        }
     }
 
     public log(message: string, level?: ELoggingLevel) {

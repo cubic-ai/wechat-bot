@@ -5,7 +5,7 @@ import defaultListeners from "./listener";
 
 export type TBotListeners = Map<string, (...args: any[]) => any>;
 
-export class BotEmitter extends EventEmitter {
+export class CubicBotEmitter extends EventEmitter {
 
     private _listeners: TBotListeners;
 

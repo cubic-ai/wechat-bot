@@ -79,7 +79,6 @@ export enum EUrl {
 }
 
 export class LoginInfo {
-
     public static wechatInitUrl: string;
     public static deviceId: string;
     public static loginTime: number;
@@ -87,7 +86,6 @@ export class LoginInfo {
     public static skey: string;
     public static wxsid: string;
     public static wxuin: string;
-
     private static readonly lookupKeys = ["wx2.qq.com", "wx8.qq.com", "wx.qq.com", "web2.wechat.com", "web.wechat.com"];
 
     public static get handshakeUrls(): { fileUrl: string, syncUrl: string } {
@@ -116,5 +114,6 @@ export class LoginInfo {
 
 export enum EBotEvent {
     LoginStart = "LoginStart",
+    GenerateQRCode = "GenerateQRCode",
     Quit = "Quit"
 }
