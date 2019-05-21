@@ -2,6 +2,7 @@ export enum EBotEvent {
     Idle = "Idle",
     LoginStart = "LoginStart",
     GenerateQRCode = "GenerateQRCode",
+    WaitAuth = "WaitAuth",
     Quit = "Quit"
 }
 

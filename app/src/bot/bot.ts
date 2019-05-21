@@ -22,24 +22,29 @@ export class WeChatBot {
 
     public start(): void {
         this._eventSubject.next({ event: EBotEvent.LoginStart });
+        // Switch to "old" stdin mode to keep main thread running without blocking it
+        process.stdin.resume();
     }
 
     private handleEvent() {
         this._event$.subscribe(({ event, payload }) => {
-            if (!isNullOrUndefined(event) && event !== EBotEvent.Idle) {
+            if (!isNullOrUndefined(event)) {
                 if (Map.isMap(this._eventHandler) && this._eventHandler.keySeq().includes(event)) {
-                    this._eventHandler.get(event)(this._config, event, payload)
-                        .then(response => {
-                            if (response.success) {
-                                logger.debug(response.data);
-                                this.emitNextEvent(event, response.data);
-                            } else {
-                                logger.error(response.errorMessage);
-                            }
-                        })
-                        .catch((error) => {
-                            logger.error(error);
-                        });
+                    const processEvent = this._eventHandler.get(event);
+                    if (!isNullOrUndefined(processEvent)) {
+                        processEvent(this._config, event, payload)
+                            .then(response => {
+                                if (response.success) {
+                                    logger.debug("response data:", response.data);
+                                    this.emitNextEvent(event, response.data);
+                                } else {
+                                    logger.error(response.errorMessage);
+                                }
+                            })
+                            .catch((error) => {
+                                logger.error(error);
+                            });
+                    }
                 } else {
                     logger.error("No handler available for event:", event);
                 }
@@ -52,6 +57,9 @@ export class WeChatBot {
         switch (currentEvent) {
             case EBotEvent.LoginStart:
                 nextEvent = EBotEvent.GenerateQRCode;
+                break;
+            case EBotEvent.GenerateQRCode:
+                nextEvent = EBotEvent.WaitAuth;
                 break;
             default:
                 break;

@@ -5,7 +5,7 @@ import * as request from "request";
 import { logger } from "../utils/logger";
 import { EBotEvent, IBotActionResponse, IBotConfig, TBotActionFunction } from "./bot.interface";
 
-const requestUUID: TBotActionFunction = async (config: IBotConfig, event: EBotEvent) => {
+const requestUUID: TBotActionFunction = (config: IBotConfig, event: EBotEvent) => {
     const options = {
         headers: { "User-Agent": config.userAgent },
         url: `${config.baseUrl}/jslogin`,
@@ -25,17 +25,20 @@ const requestUUID: TBotActionFunction = async (config: IBotConfig, event: EBotEv
     });
 };
 
-const generateQrCode: TBotActionFunction = async (config: IBotConfig, event: EBotEvent, uuid: string) => {
+const generateQrCode: TBotActionFunction = (config: IBotConfig, event: EBotEvent, uuid: string) => {
     const content: string = `${config.baseUrl}/l/${uuid}`;
-    const qrCodeText: string = await qrcode.toString(content, { type: "terminal" });
-    logger.info(`\n${qrCodeText}`);
-    logger.info("Waiting authentication...");
-    return new Promise<IBotActionResponse>((resolve, reject) => {
-        resolve();
+    return qrcode.toString(content, { type: "terminal" }).then((qrCodeText: string) => {
+        logger.log(`\n${qrCodeText}`);
+        logger.info("Waiting authentication...");
+        return Promise.resolve({ success: true } as IBotActionResponse);
     });
 };
 
 export const cEventHandler = Map({
+    // No need to handle idle event
+    [EBotEvent.Idle]: undefined,
     [EBotEvent.LoginStart]: requestUUID,
-    [EBotEvent.GenerateQRCode]: generateQrCode
+    [EBotEvent.GenerateQRCode]: generateQrCode,
+    // No need to handle wait event
+    [EBotEvent.WaitAuth]: undefined
 });
