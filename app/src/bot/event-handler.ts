@@ -3,7 +3,7 @@ import * as qrcode from "qrcode";
 import * as request from "request";
 
 import { logger } from "../utils/logger";
-import { EBotEvent, IBotActionResponse, IBotConfig, TBotActionFunction } from "./bot.interface";
+import { EBotEvent, IBotActionResponse, IBotActionResponseData, IBotConfig, TBotActionFunction } from "./bot.interface";
 
 const requestUUID: TBotActionFunction = (config: IBotConfig, event: EBotEvent) => {
     const options = {
@@ -17,7 +17,11 @@ const requestUUID: TBotActionFunction = (config: IBotConfig, event: EBotEvent) =
     return new Promise((resolve, reject) => {
         request(options, (error, response, body) => {
             if (!error && response && response.statusCode === 200) {
-                resolve({ success: true, data: body.match(/"(.+)"/)[1] } as IBotActionResponse);
+                const uuid: string = body.match(/"(.+)"/)[1];
+                resolve({
+                    success: true,
+                    data: { type: "uuid", value: uuid } as IBotActionResponseData
+                } as IBotActionResponse);
             } else {
                 reject({ success: false, errorMessage: "" } as IBotActionResponse);
             }
@@ -34,11 +38,18 @@ const generateQrCode: TBotActionFunction = (config: IBotConfig, event: EBotEvent
     });
 };
 
+const waitAuth: TBotActionFunction = (config: IBotConfig, event: EBotEvent, payload) => {
+
+    return new Promise<IBotActionResponse>((resolve, reject) => {
+        // TODO
+    });
+}
+
 export const cEventHandler = Map({
     // No need to handle idle event
     [EBotEvent.Idle]: undefined,
     [EBotEvent.LoginStart]: requestUUID,
     [EBotEvent.GenerateQRCode]: generateQrCode,
     // No need to handle wait event
-    [EBotEvent.WaitAuth]: undefined
+    [EBotEvent.WaitAuth]: waitAuth
 });

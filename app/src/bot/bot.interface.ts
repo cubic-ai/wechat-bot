@@ -11,9 +11,14 @@ export interface IBotConfig {
     readonly userAgent: string;
 }
 
+export interface IBotActionResponseData {
+    type: string;
+    value: any;
+}
+
 export interface IBotEventWithPayload {
     event: EBotEvent;
-    payload?: any;
+    payload?: IBotActionResponseData;
 }
 
 export interface IBotActionResponse {

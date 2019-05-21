@@ -11,6 +11,7 @@ export class WeChatBot {
     private _event$: Observable<IBotEventWithPayload>;
     private _eventSubject: BehaviorSubject<IBotEventWithPayload>;
     private _eventHandler: Map<string, TBotActionFunction>;
+    private _uuid: string;
 
     constructor(config: IBotConfig) {
         this._config = config;
@@ -36,7 +37,11 @@ export class WeChatBot {
                             .then(response => {
                                 if (response.success) {
                                     logger.debug("response data:", response.data);
-                                    this.emitNextEvent(event, response.data);
+                                    if (response.data.type === "uuid") {
+                                        this._uuid = response.data.value;
+                                        logger.debug("stored UUID:", this._uuid);
+                                    }
+                                    this.emitNextEvent(event, response.data.value);
                                 } else {
                                     logger.error(response.errorMessage);
                                 }
