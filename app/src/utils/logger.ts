@@ -1,7 +1,7 @@
 import { appendFileSync, existsSync} from "fs";
 
 import { isNullOrUndefined } from "util";
-import { EFontStyle, ELoggingLevel, ILoggingColor } from "../library/interface";
+import { EFontStyle, ELoggingLevel, ILoggingColor } from "./logger.interface";
 
 export const defaultLoggingColor = {
     [ELoggingLevel.None]: EFontStyle.Reset,
@@ -111,4 +111,5 @@ export class Logger {
     }
 }
 
-export const logger = new Logger();
+const logger = new Logger();
+export { logger };
