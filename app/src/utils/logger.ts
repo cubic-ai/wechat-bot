@@ -1,4 +1,4 @@
-import { appendFileSync, existsSync} from "fs";
+import { appendFileSync, existsSync } from "fs";
 
 import { isNullOrUndefined } from "util";
 import { EFontStyle, ELoggingLevel, ILoggingColor } from "./logger.interface";
@@ -94,9 +94,44 @@ export class Logger {
 
     public critical(...args: any[]) {
         const msg: string = `-- CRITICAL: ${this.compressArguments(args)}`;
-        console.log(this._loggingColor[ELoggingLevel.Critical], );
+        console.log(this._loggingColor[ELoggingLevel.Critical]);
         if (this._logToFile) {
             appendFileSync(this._logFilePath, `[${new Date()}] ${msg}`);
+        }
+    }
+
+    public file(level: ELoggingLevel, path: string, ...args: any[]) {
+        let msg: string;
+        switch (level) {
+            case ELoggingLevel.Debug: {
+                msg = `-- DEBUG: ${this.compressArguments(args)}`;
+                break;
+            }
+            case ELoggingLevel.Info: {
+                msg = `-- INFO: ${this.compressArguments(args)}`;
+                break;
+            }
+            case ELoggingLevel.Warning: {
+                msg = `-- WARN: ${this.compressArguments(args)}`;
+                break;
+            }
+            case ELoggingLevel.Error: {
+                msg = `-- ERROR: ${this.compressArguments(args)}`;
+                break;
+            }
+            case ELoggingLevel.Critical: {
+                msg = `-- CRITICAL: ${this.compressArguments(args)}`;
+                break;
+            }
+            case ELoggingLevel.None:
+            default: {
+                msg = `-- : ${this.compressArguments(args)}`;
+                break;
+            }
+        }
+        if (!isNullOrUndefined(msg)) {
+            console.log(this._loggingColor[ELoggingLevel.Error], "logging to file:", path);
+            appendFileSync(path, `[${new Date()}] ${msg}`);
         }
     }
 

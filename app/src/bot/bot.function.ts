@@ -6,6 +6,7 @@ import { isNullOrUndefined } from "util";
 import { logger } from "../utils/logger";
 import { sleep } from "../utils/utils";
 import { EBotLoginStatus, IBotConfig } from "./bot.interface";
+import { ELoggingLevel } from '../utils/logger.interface';
 
 export const requestUUID = async (config: IBotConfig) => {
     let uuid: string;
@@ -70,7 +71,14 @@ export const waitAuth = async (config: IBotConfig, uuid: string, refreshTime: nu
     while (true) {
         const localTime = Number(new Date());
         const { loginStatus, redirectUrl } = await getLoginStatus(config, uuid, localTime);
-        await processSessionInfo(config, loginStatus, redirectUrl);
+        if (loginStatus === EBotLoginStatus.LoggedIn) {
+            if (!isNullOrUndefined(redirectUrl) && redirectUrl !== "") {
+                const initUrl = `${redirectUrl.slice(0, redirectUrl.lastIndexOf("/"))}/webwxinit`;
+                const loginSession = await processSessionInfo(config, loginStatus, redirectUrl);
+                await initWeChat(config, initUrl, loginSession);
+            }
+            break;
+        }
         await sleep(refreshTime);
     }
 };
@@ -90,16 +98,9 @@ const processSessionInfo = async (config: IBotConfig, loginStatus: EBotLoginStat
             if (!isNullOrUndefined(redirectUrl) && redirectUrl !== "") {
                 logger.debug("redirect uri:", redirectUrl);
                 infoMessage = "Logged in";
-                const initUrl = `${redirectUrl.slice(0, redirectUrl.lastIndexOf("/"))}/webwxinit`;
-                logger.debug("init url:", initUrl);
-                try {
-                    const sessionInfo = await fetchLoginSession(config, redirectUrl);
-                    logger.debug("session info:", sessionInfo);
-                } catch (e) {
-                    if (!isNullOrUndefined(e || e.response)) {
-                        logger.error("processSessionInfo:", e || e.response);
-                    }
-                }
+                const sessionInfo = await fetchLoginSession(config, redirectUrl);
+                logger.debug("session info:", sessionInfo);
+                return sessionInfo;
             }
             break;
         }
@@ -116,8 +117,17 @@ const processSessionInfo = async (config: IBotConfig, loginStatus: EBotLoginStat
     }
 };
 
+export interface ILoginSessionInfo {
+    skey: string;
+    wxsid: string;
+    wxuin: string;
+    passTicket: string;
+    deviceId: string;
+    loginTime: number;
+}
+
 const fetchLoginSession = async (config: IBotConfig, redirectUrl: string) => {
-    const sessionInfo = {
+    const sessionInfo: ILoginSessionInfo = {
         skey: undefined,
         wxsid: undefined,
         wxuin: undefined,
@@ -129,9 +139,8 @@ const fetchLoginSession = async (config: IBotConfig, redirectUrl: string) => {
         headers: { "User-Agent": config.userAgent },
         maxRedirects: 0
     };
-    let response: AxiosResponse;
     try {
-        response = await axios.get(redirectUrl, options);
+        await axios.get(redirectUrl, options);
     } catch (e) {
         if (!isNullOrUndefined(e.response.data)) {
             parseString(e.response.data, (xmlError: any, xml) => {
@@ -153,10 +162,32 @@ const fetchLoginSession = async (config: IBotConfig, redirectUrl: string) => {
             });
         }
     }
-    logger.debug("session info:", sessionInfo);
     return Promise.resolve(Object.assign({}, sessionInfo));
 };
 
-const initWeChat = (initUrl: string) => {
-    //
+const initWeChat = async (config: IBotConfig, initUrl: string, sessionInfo: ILoginSessionInfo) => {
+    const localTime = Number(new Date());
+    const options: AxiosRequestConfig = {
+        headers: { "User-Agent": config.userAgent, "Content-Type": "application/json; charset=utf-8" },
+        params: {
+            r: ~localTime,
+            pass_ticket: sessionInfo.passTicket
+        }
+    };
+    const data = {
+        BaseRequest: {
+            Uin: sessionInfo.wxuin,
+            Sid: sessionInfo.wxsid,
+            Skey: sessionInfo.skey,
+            DeviceId: sessionInfo.deviceId
+        }
+    };
+    try {
+        const response = await axios.post(initUrl, data, options);
+        logger.file(ELoggingLevel.Debug, "debug.json", response.data);
+    } catch (e) {
+        if (e.response) {
+            logger.error("init:", e.response);
+        }
+    }
 };
