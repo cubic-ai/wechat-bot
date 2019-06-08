@@ -3,7 +3,7 @@ import * as qrcode from "qrcode";
 import { parseString } from "xml2js";
 
 import { isNullOrUndefined } from "util";
-import { logger, defaultLoggingColor } from "../utils/logger";
+import { logger } from "../utils/logger";
 import { sleep } from "../utils/utils";
 import { EBotLoginStatus, IBotConfig } from "./bot.interface";
 
@@ -24,7 +24,9 @@ export const requestUUID = async (config: IBotConfig) => {
             uuid = response.data.match(regex)[2];
         }
     } catch (e) {
-        logger.error(e.response);
+        if (!isNullOrUndefined(e || e.response)) {
+            logger.error("requestUUID:", e || e.response);
+        }
     }
     return Promise.resolve(uuid);
 };
@@ -57,7 +59,9 @@ const getLoginStatus = async (config: IBotConfig, uuid: string, timestamp: numbe
             redirectUrl = response.data.match(/window.redirect_uri="(\S+)";/)[1];
         }
     } catch (e) {
-        logger.error("status:", e.response);
+        if (!isNullOrUndefined(e.response)) {
+            logger.error("status:", e.response);
+        }
     }
     return Promise.resolve({ loginStatus, redirectUrl });
 };
@@ -88,8 +92,14 @@ const processSessionInfo = async (config: IBotConfig, loginStatus: EBotLoginStat
                 infoMessage = "Logged in";
                 const initUrl = `${redirectUrl.slice(0, redirectUrl.lastIndexOf("/"))}/webwxinit`;
                 logger.debug("init url:", initUrl);
-                const sessionInfo = await fetchLoginSession(config, redirectUrl);
-                logger.debug("session info:", sessionInfo);
+                try {
+                    const sessionInfo = await fetchLoginSession(config, redirectUrl);
+                    logger.debug("session info:", sessionInfo);
+                } catch (e) {
+                    if (!isNullOrUndefined(e || e.response)) {
+                        logger.error("processSessionInfo:", e || e.response);
+                    }
+                }
             }
             break;
         }
@@ -104,7 +114,6 @@ const processSessionInfo = async (config: IBotConfig, loginStatus: EBotLoginStat
     if (!isNullOrUndefined(infoMessage)) {
         logger.info(infoMessage);
     }
-    return Promise.resolve();
 };
 
 const fetchLoginSession = async (config: IBotConfig, redirectUrl: string) => {
@@ -116,21 +125,23 @@ const fetchLoginSession = async (config: IBotConfig, redirectUrl: string) => {
         deviceId: undefined,
         loginTime: undefined
     };
-    const options: AxiosRequestConfig = {
+    const options = {
         headers: { "User-Agent": config.userAgent },
         maxRedirects: 0
     };
+    let response: AxiosResponse;
     try {
-        const response: AxiosResponse = await axios.get(redirectUrl, options);
-        if (response && response.data) {
-            parseString(response.data, (xmlData: any) => {
-                if (xmlData.error && xmlData.error.ret) {
-                    logger.warn("Xml data:" + JSON.stringify(xmlData.error));
-                    const returnCode = xmlData.error.ret;
+        response = await axios.get(redirectUrl, options);
+    } catch (e) {
+        if (!isNullOrUndefined(e.response.data)) {
+            parseString(e.response.data, (xmlError: any, xml) => {
+                if (isNullOrUndefined(xmlError) && xml.error && xml.error.ret) {
+                    logger.warn("Xml data:" + JSON.stringify(xml.error));
+                    const returnCode = xml.error.ret;
                     if (Array.isArray(returnCode) && returnCode.indexOf("0") > -1) {
                         const deviceId = `e${String(Math.random()).slice(2, 17)}`;
                         const loginTime = (new Date()).getTime();
-                        const { skey, wxsid, wxuin, pass_ticket } = xmlData.error;
+                        const { skey, wxsid, wxuin, pass_ticket } = xml.error;
                         sessionInfo.skey = skey[0];
                         sessionInfo.wxsid = wxsid[0];
                         sessionInfo.wxuin = wxuin[0];
@@ -141,9 +152,8 @@ const fetchLoginSession = async (config: IBotConfig, redirectUrl: string) => {
                 }
             });
         }
-    } catch (e) {
-        logger.error(e.response);
     }
+    logger.debug("session info:", sessionInfo);
     return Promise.resolve(Object.assign({}, sessionInfo));
 };
 
