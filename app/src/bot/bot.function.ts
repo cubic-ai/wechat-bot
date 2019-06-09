@@ -1,12 +1,14 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import axios, { AxiosRequestConfig } from "axios";
+import { List, Map } from "immutable";
 import * as qrcode from "qrcode";
 import { parseString } from "xml2js";
 
 import { isNullOrUndefined } from "util";
 import { logger } from "../utils/logger";
+import { ELoggingLevel } from "../utils/logger.interface";
 import { sleep } from "../utils/utils";
 import { EBotLoginStatus, IBotConfig } from "./bot.interface";
-import { ELoggingLevel } from '../utils/logger.interface';
+import { ContextReplacementPlugin } from 'webpack';
 
 export const requestUUID = async (config: IBotConfig) => {
     let uuid: string;
@@ -75,7 +77,11 @@ export const waitAuth = async (config: IBotConfig, uuid: string, refreshTime: nu
             if (!isNullOrUndefined(redirectUrl) && redirectUrl !== "") {
                 const initUrl = `${redirectUrl.slice(0, redirectUrl.lastIndexOf("/"))}/webwxinit`;
                 const loginSession = await processSessionInfo(config, loginStatus, redirectUrl);
-                await initWeChat(config, initUrl, loginSession);
+                const initResponse = await initWeChat(config, initUrl, loginSession);
+                const initData = extractInitInfo(initResponse);
+                logger.debug("init data", initData.toJS());
+                await initNotification(config, loginSession, initData.get("userId"));
+                await checkSyncStatus(config, loginSession, initData.get("syncKey"));
             }
             break;
         }
@@ -166,6 +172,7 @@ const fetchLoginSession = async (config: IBotConfig, redirectUrl: string) => {
 };
 
 const initWeChat = async (config: IBotConfig, initUrl: string, sessionInfo: ILoginSessionInfo) => {
+    let response: any;
     const localTime = Number(new Date());
     const options: AxiosRequestConfig = {
         headers: { "User-Agent": config.userAgent, "Content-Type": "application/json; charset=utf-8" },
@@ -183,11 +190,108 @@ const initWeChat = async (config: IBotConfig, initUrl: string, sessionInfo: ILog
         }
     };
     try {
-        const response = await axios.post(initUrl, data, options);
-        logger.file(ELoggingLevel.Debug, "debug.json", response.data);
+        response = await axios.post(initUrl, data, options);
     } catch (e) {
         if (e.response) {
             logger.error("init:", e.response);
         }
+    }
+    if (!isNullOrUndefined(response)) {
+        return response.data;
+    }
+};
+
+const extractInitInfo = (initData: any) => {
+    let info = Map<string, any>();
+    if (!isNullOrUndefined(initData) && !isNullOrUndefined(initData.User)) {
+        const userInfo = initData.User;
+        let syncKey: string;
+        if (!isNullOrUndefined(initData.SyncKey)) {
+            if (Array.isArray(initData.SyncKey.List)) {
+                syncKey = initData.SyncKey.List.map(({Key, Val}) => `${Key}_${Val}`).join("|");
+            }
+        }
+        info = info.withMutations(mutable => {
+            mutable.set("userId", userInfo.UserName);
+            mutable.set("inviteStartCount", initData.InviteStartCount);
+            mutable.set("syncKey", syncKey);
+            mutable.set("nickName", userInfo.NickName);
+        });
+    }
+    if (!isNullOrUndefined(initData) && Array.isArray(initData.ContactList)) {
+        const { chatGroups, friends } = extractChatGroupsAndFriends(initData.ContactList);
+        logger.debug("groups size:", chatGroups.size, "friends size:", friends.size);
+    }
+    return info;
+};
+
+const extractChatGroupsAndFriends = (contactList: any[]) => {
+    let chatGroups = List();
+    let friends = List();
+    if (Array.isArray(contactList)) {
+        contactList.forEach(contact => {
+            if (!isNullOrUndefined(contact)) {
+                if (typeof contact.UserName === "string") {
+                    if (contact.UserName.startsWith("@@")) {
+                        chatGroups = chatGroups.push(contact);
+                    } else if (contact.UserName.startsWith("@")) {
+                        if ( !isNullOrUndefined(contact.Sex) && contact.Sex !== 0) {
+                            friends = friends.push(contact);
+                        }
+                    }
+                }
+            }
+        });
+    }
+    return { chatGroups, friends };
+};
+
+const initNotification = async (config: IBotConfig, sessionInfo: ILoginSessionInfo, userId: string) => {
+    const url: string = `${config.baseUrl}/mmwebwx-bin/webwxstatusnotify`;
+    const localTime = Number(new Date());
+    const options: AxiosRequestConfig = {
+        headers: { "User-Agent": config.userAgent, "Content-Type": "application/json; charset=utf-8" }
+    };
+    const data = {
+        BaseRequest: {
+            Uin: sessionInfo.wxuin,
+            Sid: sessionInfo.wxsid,
+            Skey: sessionInfo.skey,
+            DeviceId: sessionInfo.deviceId
+        },
+        Code: 3,
+        FromUserName: userId,
+        ToUserName: userId,
+        ClientMsgId: localTime
+    };
+    try {
+        logger.debug("notification url:", url, "data:", data, "options:", options)
+        const response = await axios.post(url, data, options);
+        // logger.debug("initNotification:", response.data);
+    } catch (e) {
+        logger.error(e.response);
+    }
+};
+
+const checkSyncStatus = async (config: IBotConfig, sessionInfo: ILoginSessionInfo, syncKey: string) => {
+    const url = `${config.baseUrl}/cgi-bin/mmwebwx-bin/synccheck`;
+    const localTime = Number(new Date());
+    const options: AxiosRequestConfig = {
+        params: {
+            r: ~localTime,
+            skey: sessionInfo.skey,
+            sid: sessionInfo.wxsid,
+            uin: sessionInfo.wxuin,
+            deviceid: sessionInfo.deviceId,
+            synckey: syncKey,
+            _: localTime
+        },
+        headers: { "User-Agent": config.userAgent }
+    };
+    try {
+        const response = await axios.get(url, options);
+        logger.debug("check sync status:", response.data);
+    } catch (e) {
+        logger.error(e.response);
     }
 };
