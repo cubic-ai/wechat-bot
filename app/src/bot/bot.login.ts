@@ -6,7 +6,7 @@ import { parseString } from "xml2js";
 import { isNullOrUndefined } from "util";
 import { logger } from "../utils/logger";
 import { sleep } from "../utils/utils";
-import { EBotLoginStatus, IBotConfig } from "./bot.interface";
+import { EBotLoginStatus, IBotConfig, ILoginSessionInfo } from "./bot.interface";
 
 export const requestUUID = async (config: IBotConfig) => {
     let uuid: string;
@@ -29,7 +29,7 @@ export const requestUUID = async (config: IBotConfig) => {
             logger.error("requestUUID:", e || e.response);
         }
     }
-    return Promise.resolve(uuid);
+    return uuid;
 };
 
 export const generateQrCode = async (config: IBotConfig, uuid: string) => {
@@ -119,15 +119,6 @@ const processSessionInfo = async (config: IBotConfig, loginStatus: EBotLoginStat
     }
 };
 
-export interface ILoginSessionInfo {
-    skey: string;
-    wxsid: string;
-    wxuin: string;
-    passTicket: string;
-    deviceId: string;
-    loginTime: number;
-}
-
 const fetchLoginSession = async (config: IBotConfig, redirectUrl: string) => {
     const sessionInfo: ILoginSessionInfo = {
         skey: undefined,
@@ -213,36 +204,7 @@ const extractInitInfo = (initData: any) => {
             mutable.set("nickName", userInfo.NickName);
         });
     }
-    if (!isNullOrUndefined(initData) && Array.isArray(initData.ContactList)) {
-        const { chatGroups, friends } = extractChatGroupsAndFriends(initData.ContactList);
-    }
     return info;
-};
-
-const getContactList = (baseUrl: string) => {
-    const url: string = `${baseUrl}/cgi-bin/mmwebwx-bin/webwxgetcontact`;
-
-};
-
-const extractChatGroupsAndFriends = (contactList: any[]) => {
-    let chatGroups = List();
-    let friends = List();
-    if (Array.isArray(contactList)) {
-        contactList.forEach(contact => {
-            if (!isNullOrUndefined(contact)) {
-                if (typeof contact.UserName === "string") {
-                    if (contact.UserName.startsWith("@@")) {
-                        chatGroups = chatGroups.push(contact);
-                    } else if (contact.UserName.startsWith("@")) {
-                        if (!isNullOrUndefined(contact.Sex) && contact.Sex !== 0) {
-                            friends = friends.push(contact);
-                        }
-                    }
-                }
-            }
-        });
-    }
-    return { chatGroups, friends };
 };
 
 const initNotificationStream = async (

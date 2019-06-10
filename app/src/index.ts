@@ -3,7 +3,7 @@ import { cBotConfig } from "./bot/bot.interface";
 
 async function main() {
     const bot = new WeChatBot(cBotConfig);
-    await bot.start();
+    await bot.login();
 }
 main();
 // Switch to "old" stdin mode to keep main thread running without blocking it
