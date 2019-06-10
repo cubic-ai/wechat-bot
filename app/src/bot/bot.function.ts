@@ -5,14 +5,12 @@ import { parseString } from "xml2js";
 
 import { isNullOrUndefined } from "util";
 import { logger } from "../utils/logger";
-import { ELoggingLevel } from "../utils/logger.interface";
 import { sleep } from "../utils/utils";
 import { EBotLoginStatus, IBotConfig } from "./bot.interface";
-import { ContextReplacementPlugin } from 'webpack';
 
 export const requestUUID = async (config: IBotConfig) => {
     let uuid: string;
-    const url = `${config.baseUrl}/jslogin`;
+    const url = `${config.baseLoginUrl}/jslogin`;
     const options = {
         headers: { "User-Agent": config.userAgent },
         params: {
@@ -35,7 +33,7 @@ export const requestUUID = async (config: IBotConfig) => {
 };
 
 export const generateQrCode = async (config: IBotConfig, uuid: string) => {
-    const content: string = `${config.baseUrl}/l/${uuid}`;
+    const content: string = `${config.baseLoginUrl}/l/${uuid}`;
     return qrcode.toString(content, { type: "terminal" }).then((qrCodeText: string) => {
         logger.log(`\n${qrCodeText}`);
     });
@@ -44,7 +42,7 @@ export const generateQrCode = async (config: IBotConfig, uuid: string) => {
 const getLoginStatus = async (config: IBotConfig, uuid: string, timestamp: number) => {
     let loginStatus: EBotLoginStatus;
     let redirectUrl: string;
-    const url: string = `${config.baseUrl}/cgi-bin/mmwebwx-bin/login`;
+    const url: string = `${config.baseLoginUrl}/cgi-bin/mmwebwx-bin/login`;
     const options = {
         headers: { "User-Agent": config.userAgent },
         params: {
@@ -63,10 +61,10 @@ const getLoginStatus = async (config: IBotConfig, uuid: string, timestamp: numbe
         }
     } catch (e) {
         if (!isNullOrUndefined(e.response)) {
-            logger.error("status:", e.response);
+            logger.error("getLoginStatus:", e.response);
         }
     }
-    return Promise.resolve({ loginStatus, redirectUrl });
+    return { loginStatus, redirectUrl };
 };
 
 export const waitAuth = async (config: IBotConfig, uuid: string, refreshTime: number) => {
@@ -79,9 +77,9 @@ export const waitAuth = async (config: IBotConfig, uuid: string, refreshTime: nu
                 const loginSession = await processSessionInfo(config, loginStatus, redirectUrl);
                 const initResponse = await initWeChat(config, initUrl, loginSession);
                 const initData = extractInitInfo(initResponse);
-                logger.debug("init data", initData.toJS());
-                await initNotification(config, loginSession, initData.get("userId"));
-                await checkSyncStatus(config, loginSession, initData.get("syncKey"));
+                const baseUrl = `https://${initUrl.split("/")[2]}`;
+                await initNotificationStream(config, loginSession, initData.get("userId"), baseUrl);
+                await checkSyncStatus(config, loginSession, initData.get("syncKey"), baseUrl);
             }
             break;
         }
@@ -102,10 +100,8 @@ const processSessionInfo = async (config: IBotConfig, loginStatus: EBotLoginStat
         }
         case EBotLoginStatus.LoggedIn: {
             if (!isNullOrUndefined(redirectUrl) && redirectUrl !== "") {
-                logger.debug("redirect uri:", redirectUrl);
                 infoMessage = "Logged in";
                 const sessionInfo = await fetchLoginSession(config, redirectUrl);
-                logger.debug("session info:", sessionInfo);
                 return sessionInfo;
             }
             break;
@@ -119,7 +115,7 @@ const processSessionInfo = async (config: IBotConfig, loginStatus: EBotLoginStat
         }
     }
     if (!isNullOrUndefined(infoMessage)) {
-        logger.info(infoMessage);
+        logger.info("processSessionInfo:", infoMessage);
     }
 };
 
@@ -151,7 +147,6 @@ const fetchLoginSession = async (config: IBotConfig, redirectUrl: string) => {
         if (!isNullOrUndefined(e.response.data)) {
             parseString(e.response.data, (xmlError: any, xml) => {
                 if (isNullOrUndefined(xmlError) && xml.error && xml.error.ret) {
-                    logger.warn("Xml data:" + JSON.stringify(xml.error));
                     const returnCode = xml.error.ret;
                     if (Array.isArray(returnCode) && returnCode.indexOf("0") > -1) {
                         const deviceId = `e${String(Math.random()).slice(2, 17)}`;
@@ -193,7 +188,7 @@ const initWeChat = async (config: IBotConfig, initUrl: string, sessionInfo: ILog
         response = await axios.post(initUrl, data, options);
     } catch (e) {
         if (e.response) {
-            logger.error("init:", e.response);
+            logger.error("initWeChat:", e.response);
         }
     }
     if (!isNullOrUndefined(response)) {
@@ -208,7 +203,7 @@ const extractInitInfo = (initData: any) => {
         let syncKey: string;
         if (!isNullOrUndefined(initData.SyncKey)) {
             if (Array.isArray(initData.SyncKey.List)) {
-                syncKey = initData.SyncKey.List.map(({Key, Val}) => `${Key}_${Val}`).join("|");
+                syncKey = initData.SyncKey.List.map(({ Key, Val }) => `${Key}_${Val}`).join("|");
             }
         }
         info = info.withMutations(mutable => {
@@ -220,9 +215,13 @@ const extractInitInfo = (initData: any) => {
     }
     if (!isNullOrUndefined(initData) && Array.isArray(initData.ContactList)) {
         const { chatGroups, friends } = extractChatGroupsAndFriends(initData.ContactList);
-        logger.debug("groups size:", chatGroups.size, "friends size:", friends.size);
     }
     return info;
+};
+
+const getContactList = (baseUrl: string) => {
+    const url: string = `${baseUrl}/cgi-bin/mmwebwx-bin/webwxgetcontact`;
+
 };
 
 const extractChatGroupsAndFriends = (contactList: any[]) => {
@@ -235,7 +234,7 @@ const extractChatGroupsAndFriends = (contactList: any[]) => {
                     if (contact.UserName.startsWith("@@")) {
                         chatGroups = chatGroups.push(contact);
                     } else if (contact.UserName.startsWith("@")) {
-                        if ( !isNullOrUndefined(contact.Sex) && contact.Sex !== 0) {
+                        if (!isNullOrUndefined(contact.Sex) && contact.Sex !== 0) {
                             friends = friends.push(contact);
                         }
                     }
@@ -246,15 +245,26 @@ const extractChatGroupsAndFriends = (contactList: any[]) => {
     return { chatGroups, friends };
 };
 
-const initNotification = async (config: IBotConfig, sessionInfo: ILoginSessionInfo, userId: string) => {
-    const url: string = `${config.baseUrl}/mmwebwx-bin/webwxstatusnotify`;
+const initNotificationStream = async (
+    config: IBotConfig,
+    sessionInfo: ILoginSessionInfo,
+    userId: string,
+    baseUrl: string
+) => {
+    let messageId: string;
+    const url: string =
+        `${baseUrl}/cgi-bin/mmwebwx-bin/webwxstatusnotify`;
     const localTime = Number(new Date());
     const options: AxiosRequestConfig = {
-        headers: { "User-Agent": config.userAgent, "Content-Type": "application/json; charset=utf-8" }
+        headers: { "User-Agent": config.userAgent, "Content-Type": "application/json; charset=utf-8" },
+        params: {
+            lang: "en_GB",
+            pass_ticket: sessionInfo.passTicket
+        }
     };
     const data = {
         BaseRequest: {
-            Uin: sessionInfo.wxuin,
+            Uin: Number(sessionInfo.wxuin),
             Sid: sessionInfo.wxsid,
             Skey: sessionInfo.skey,
             DeviceId: sessionInfo.deviceId
@@ -265,20 +275,39 @@ const initNotification = async (config: IBotConfig, sessionInfo: ILoginSessionIn
         ClientMsgId: localTime
     };
     try {
-        logger.debug("notification url:", url, "data:", data, "options:", options)
         const response = await axios.post(url, data, options);
-        // logger.debug("initNotification:", response.data);
+        if (typeof response.data === "object") {
+            const baseResponse = response.data.BaseResponse;
+            if (!isNullOrUndefined(baseResponse)) {
+                if (baseResponse.Ret === 0) {
+                    logger.info("initNotificationStream: notification stream initialised");
+                    messageId = response.data.MsgID;
+                } else if (baseResponse.ErrMsg) {
+                    logger.error("initNotificationStream:", baseResponse.ErrMsg);
+                }
+            }
+        }
     } catch (e) {
-        logger.error(e.response);
+        logger.error("initNotificationStream:", e.response);
+    }
+    if (isNullOrUndefined(messageId)) {
+        logger.error("initNotificationStream: error occurred when fetching message ID");
+    } else {
+        return messageId;
     }
 };
 
-const checkSyncStatus = async (config: IBotConfig, sessionInfo: ILoginSessionInfo, syncKey: string) => {
-    const url = `${config.baseUrl}/cgi-bin/mmwebwx-bin/synccheck`;
+const checkSyncStatus = async (
+    config: IBotConfig,
+    sessionInfo: ILoginSessionInfo,
+    syncKey: string,
+    baseUrl: string
+) => {
+    const url = `${baseUrl}/cgi-bin/mmwebwx-bin/synccheck`;
     const localTime = Number(new Date());
     const options: AxiosRequestConfig = {
         params: {
-            r: ~localTime,
+            r: localTime,
             skey: sessionInfo.skey,
             sid: sessionInfo.wxsid,
             uin: sessionInfo.wxuin,
@@ -286,12 +315,12 @@ const checkSyncStatus = async (config: IBotConfig, sessionInfo: ILoginSessionInf
             synckey: syncKey,
             _: localTime
         },
-        headers: { "User-Agent": config.userAgent }
+        headers: { "User-Agent": config.userAgent, "Content-Type": "application/json; charset=utf-8" }
     };
     try {
         const response = await axios.get(url, options);
-        logger.debug("check sync status:", response.data);
+        logger.debug("checkSyncStatus:", response.data);
     } catch (e) {
-        logger.error(e.response);
+        logger.error("checkSyncStatus:", e.response);
     }
 };
