@@ -5,7 +5,6 @@ import { isNullOrUndefined } from "util";
 import { logger } from "../utils/logger";
 import { IBotConfig, ILoginSessionInfo } from "./bot.interface";
 
-// FIXME
 export const requestContactJSON = async (config: IBotConfig, loginSession: ILoginSessionInfo, baseUrl: string) => {
     let contactJSON: object = {};
     const url: string = `${baseUrl}/cgi-bin/mmwebwx-bin/webwxgetcontact`;
@@ -29,12 +28,10 @@ export const requestContactJSON = async (config: IBotConfig, loginSession: ILogi
         }
     };
     try {
-        logger.debug("params:", options.params);
         const response = await axios.post(url, data, options);
         if (!isNullOrUndefined(response.data)) {
             contactJSON = response.data;
         }
-        logger.debug("requestContactJSON:", response.data);
     } catch (e) {
         logger.error("requestContactJSON:", e.reponse.data);
     }

@@ -5,7 +5,6 @@ import { parseString } from "xml2js";
 
 import { isNullOrUndefined } from "util";
 import { logger } from "../utils/logger";
-import { ELoggingLevel } from "../utils/logger.interface";
 import { sleep } from "../utils/utils";
 import { requestContactJSON } from "./bot.contact";
 import { EBotLoginStatus, IBotConfig, ILoginSessionInfo } from "./bot.interface";
@@ -82,7 +81,6 @@ export const waitAuth = async (config: IBotConfig, uuid: string, refreshTime: nu
                 const initResponse = await initWeChat(config, initUrl, loginSession);
                 const baseUrl = `https://${initUrl.split("/")[2]}`;
                 const contactJSON = await requestContactJSON(config, loginSession, baseUrl);
-                logger.file(ELoggingLevel.None, "contact.json", contactJSON);
                 initData = extractInitInfo(initResponse);
                 await initNotificationStream(config, loginSession, initData.get("userId"), baseUrl);
             }
@@ -194,6 +192,7 @@ const initWeChat = async (config: IBotConfig, initUrl: string, sessionInfo: ILog
         }
     }
     if (!isNullOrUndefined(response)) {
+        logger.info("initWeChat: success");
         return response.data;
     }
 };
@@ -253,7 +252,7 @@ const initNotificationStream = async (
             const baseResponse = response.data.BaseResponse;
             if (!isNullOrUndefined(baseResponse)) {
                 if (baseResponse.Ret === 0) {
-                    logger.info("initNotificationStream: notification stream initialised");
+                    logger.info("initNotificationStream: success");
                     messageId = response.data.MsgID;
                 } else if (baseResponse.ErrMsg) {
                     logger.error("initNotificationStream:", baseResponse.ErrMsg);
@@ -278,14 +277,6 @@ const checkSyncStatus = async (
     const baseUrl = "https://webpush.web.wechat.com";
     const url = `${baseUrl}/cgi-bin/mmwebwx-bin/synccheck`;
     const localTime = Number(new Date());
-    const data = {
-        BaseRequest: {
-            Uin: sessionInfo.wxuin,
-            Sid: sessionInfo.wxsid,
-            Skey: sessionInfo.skey,
-            DeviceId: sessionInfo.deviceId
-        }
-    };
     const options: AxiosRequestConfig = {
         headers: { "User-Agent": config.userAgent },
         params: {
@@ -299,11 +290,9 @@ const checkSyncStatus = async (
         },
     };
     try {
-        logger.debug("Url:", url);
-        logger.debug();
-        logger.debug("Params:", options.params);
-        const response = await axios.post(url, data, options);
-        logger.debug("checkSyncStatus:", response.data);
+        logger.debug("url:", url);
+        logger.debug("params:", options.params);
+        const response = await axios.get(url, options);
         if (typeof response.data === "string") {
             const regexResult = response.data.match(/window.synccheck={retcode:"(\d+)",selector:"(\d+)"}/);
             const returnCode = regexResult[1];
