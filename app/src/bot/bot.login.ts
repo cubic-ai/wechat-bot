@@ -1,11 +1,13 @@
 import axios, { AxiosRequestConfig } from "axios";
-import { List, Map } from "immutable";
+import { Map } from "immutable";
 import * as qrcode from "qrcode";
 import { parseString } from "xml2js";
 
 import { isNullOrUndefined } from "util";
 import { logger } from "../utils/logger";
+import { ELoggingLevel } from "../utils/logger.interface";
 import { sleep } from "../utils/utils";
+import { requestContactJSON } from "./bot.contact";
 import { EBotLoginStatus, IBotConfig, ILoginSessionInfo } from "./bot.interface";
 
 export const requestUUID = async (config: IBotConfig) => {
@@ -68,22 +70,31 @@ const getLoginStatus = async (config: IBotConfig, uuid: string, timestamp: numbe
 };
 
 export const waitAuth = async (config: IBotConfig, uuid: string, refreshTime: number) => {
+    let loginSession: any;
+    let initData: any;
     while (true) {
         const localTime = Number(new Date());
         const { loginStatus, redirectUrl } = await getLoginStatus(config, uuid, localTime);
         if (loginStatus === EBotLoginStatus.LoggedIn) {
             if (!isNullOrUndefined(redirectUrl) && redirectUrl !== "") {
                 const initUrl = `${redirectUrl.slice(0, redirectUrl.lastIndexOf("/"))}/webwxinit`;
-                const loginSession = await processSessionInfo(config, loginStatus, redirectUrl);
+                loginSession = await processSessionInfo(config, loginStatus, redirectUrl);
                 const initResponse = await initWeChat(config, initUrl, loginSession);
-                const initData = extractInitInfo(initResponse);
                 const baseUrl = `https://${initUrl.split("/")[2]}`;
+                const contactJSON = await requestContactJSON(config, loginSession, baseUrl);
+                logger.file(ELoggingLevel.None, "contact.json", contactJSON);
+                initData = extractInitInfo(initResponse);
                 await initNotificationStream(config, loginSession, initData.get("userId"), baseUrl);
-                await checkSyncStatus(config, loginSession, initData.get("syncKey"), baseUrl);
             }
             break;
         }
         await sleep(refreshTime);
+    }
+
+    // FIXME
+    while (true) {
+        await checkSyncStatus(config, loginSession, initData.get("syncKey"));
+        await sleep(3000);
     }
 };
 
@@ -263,25 +274,42 @@ const checkSyncStatus = async (
     config: IBotConfig,
     sessionInfo: ILoginSessionInfo,
     syncKey: string,
-    baseUrl: string
 ) => {
+    const baseUrl = "https://webpush.web.wechat.com";
     const url = `${baseUrl}/cgi-bin/mmwebwx-bin/synccheck`;
     const localTime = Number(new Date());
+    const data = {
+        BaseRequest: {
+            Uin: sessionInfo.wxuin,
+            Sid: sessionInfo.wxsid,
+            Skey: sessionInfo.skey,
+            DeviceId: sessionInfo.deviceId
+        }
+    };
     const options: AxiosRequestConfig = {
+        headers: { "User-Agent": config.userAgent },
         params: {
             r: localTime,
             skey: sessionInfo.skey,
             sid: sessionInfo.wxsid,
-            uin: sessionInfo.wxuin,
+            uin: Number(sessionInfo.wxuin),
             deviceid: sessionInfo.deviceId,
             synckey: syncKey,
             _: localTime
         },
-        headers: { "User-Agent": config.userAgent, "Content-Type": "application/json; charset=utf-8" }
     };
     try {
-        const response = await axios.get(url, options);
+        logger.debug("Url:", url);
+        logger.debug();
+        logger.debug("Params:", options.params);
+        const response = await axios.post(url, data, options);
         logger.debug("checkSyncStatus:", response.data);
+        if (typeof response.data === "string") {
+            const regexResult = response.data.match(/window.synccheck={retcode:"(\d+)",selector:"(\d+)"}/);
+            const returnCode = regexResult[1];
+            const selector = regexResult[2];
+            logger.debug("return code:", returnCode, "selector:", selector);
+        }
     } catch (e) {
         logger.error("checkSyncStatus:", e.response);
     }
